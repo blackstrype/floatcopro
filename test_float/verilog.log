@@ -1,0 +1,13 @@
+GPLCVER_2.12a of 05/16/07 (Linux-elf).
+Copyright (c) 1991-2007 Pragmatic C Software Corp.
+  All Rights reserved.  Licensed under the GNU General Public License (GPL).
+  See the 'COPYING' file for details.  NO WARRANTY provided.
+Today is Thu Nov  3 16:04:03 2011.
+Compiling source file "tb_float_pack.sv"
+**tb_float_pack.sv(2) ERROR** [1044] instance/gate "float_pack" type "import" connection list expected - : read
+**tb_float_pack.sv(7) ERROR** [1044] instance/gate "a" type "shortreal" connection list expected - ; read
+**tb_float_pack.sv(8) ERROR** [1044] instance/gate "b" type "float_ieee" connection list expected - ; read
+**tb_float_pack.sv(9) ERROR** [1043] instance/gate name for type "logic" expected - [ read
+  Unable to begin simulation.
+  There were 4 error(s), 0 warning(s), and 0 inform(s).
+End of GPLCVER_2.12a at Thu Nov  3 16:04:03 2011 (elapsed 0.0 seconds).
