@@ -1,4 +1,4 @@
-# vsim -do {run -all} -c tb_float_conv 
+# vsim -do {run -all} -c tb_float_mult 
 # ** Note: (vsim-3813) Design is being optimized due to module recompilation...
 # //  ModelSim SE-64 10.0c Jul 21 2011 Linux 2.6.32-5-amd64
 # //
@@ -11,8 +11,8 @@
 # //
 # Loading sv_std.std
 # Loading work.float_pack
-# Loading work.tb_float_conv_sv_unit
-# Loading work.tb_float_conv(fast)
+# Loading work.tb_float_mult_sv_unit
+# Loading work.tb_float_mult(fast)
 # run -all 
-# ** Note: $finish    : tb_float_conv.sv(68)
-#    Time: 10 ms  Iteration: 0  Instance: /tb_float_conv
+# ** Note: $finish    : tb_float_mult.sv(156)
+#    Time: 10 ms  Iteration: 0  Instance: /tb_float_mult

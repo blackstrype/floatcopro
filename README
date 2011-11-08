@@ -1,1 +1,57 @@
-This is my very first github repos file. What now?
+    // Different Scenarios with base 10...
+    // Suppose:
+    //   exp1 = 2
+    //   exp2 = 3
+    //   man1 = 1.1
+    //   man2 = 1.2
+    // According to the above calculation:
+    //   mant = .32
+    // Precision hasn't changed
+    //
+    // Suppose:
+    //   exp1 = 2
+    //   exp2 = 3
+    //   man1 = 1.5
+    //   man2 = 1.6
+    // According to the calc:
+    //   mant = 1.1 + 0.3 = 1.4
+    // Precision has changed! Need to shift mantissa and increment exponant
+    //   mant = 0.14
+    //   exp = 6 (2+3+1)
+    //
+    // Different Scenarios with base 2...
+    // Suppose:
+    //   exp1 = '10
+    //   exp2 = '11
+    //   man1 = 1.1
+    //   man2 = 1.01
+    // According to the calc:
+    //   mant = .11 + .001 = .111
+    // Precision hasn't changed
+    //
+    // Suppose:
+    //   exp1 = '10
+    //   exp2 = '11
+    //   man1 = 1.1
+    //   man2 = 1.1
+    // According to the calc:
+    //   mant = 1.0 + .1 = 1.1
+    // Precision has changed! Need to shift mantissa and increment exponant
+    //   mant = 0.11
+    //   exp = '110 ('10 + '11 + '01)
+    //
+    // Suppose:
+    //   exp1 = '10
+    //   exp2 = '11
+    //   man1 = 1.1111
+    //   man2 = 1.1111
+    // According to the calc:
+    //   mant = 1.1111 + 0.11100001 = 10.11010001
+    // Precision has changed! Need to shift mantissa and increment exponant
+    // However, the final mantissa value will be 11.11010001, which is to say
+    // that mant needs to end up as 0.111010001
+    //   mant = 0.111010001
+    //   exp = '110 ('10 + '11 + '01)
+    // According to the above
+    //   mant = .11 + .01 = .0111
+    // Precision hasn't changed

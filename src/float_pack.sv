@@ -75,28 +75,40 @@ package float_pack;
   /**
    * multiplication de op1 et op2
   **/
-  function float float_mult(float op1, float op2);
+  function float float_mul(float op1, float op2);
+    parameter MANTISSA_PRODUCT_BITS = N_mantisse * 2 + 2;
     // stockage temporaire pour les resultats du multiplication
-    bit [0:N_exposant-1] exp;
-    bit [0:(N_mantisse-1) * 2] mant; // Ca puet-être ne marchera pas...
-                                     // Nous avons besoin d'un champs de 
-                                     // bits assez grands de garder le
-                                     // resultat de le multiplication du
-                                     // mantisse
+    bit [0:N_exposant] exp;
+    bit [0:MANTISSA_PRODUCT_BITS - 1] mant;
+    bit mantissa_carry; // mantissa too big
+    bit exponent_carry; // exponent too big
 
-    // 1.x * 1.y = (1 + 0.x) + (1 + 0.y) 
-    //   = 1 + 0.x + 0.y + 0.x*0.y = 1.(0.x + 0.y + 0.x*0.y) = 1.(mant)
-    // mant = (0.x + 0.y + 0.x*0.y)
-    mant = op1.mantisse + op2.mantisse + op1.mantisse*op2.mantisse;
-    // if mant > 1
-    //    mant = mant >> 1;
-    //    exposant += 1;
-    // else
-    //    
+    // mant = 1.x * 1.y
+    // where x = op1.mantisse, y = op2.mantisse
+    assign mant = (op1.mantisse + 2**N_mantisse) * 
+                  (op2.mantisse + 2**N_mantisse);
+    // exponant calculated as...
+    assign exp = op1.exposant + op2.exposant + mantissa_carry;
 
-    float_mult.signe = op1.signe ^ op2.signe; // XOR
-    float_mult.exposant = 0;
-    float_mult.mantisse = 0;
+    assign mantissa_carry = mant[MANTISSA_PRODUCT_BITS - 1] |
+                            mant[MANTISSA_PRODUCT_BITS - 2];
+    assign exponent_carry = exp[N_exposant];
+
+    // if there is carry (else block), shift mantissa and add to exponant
+    if(exponent_carry) begin
+      // if the exponant is too large, saturate
+      float_mul.mantisse = 2**N_mantisse - 1;
+      float_mul.exposant = 2**N_exposant - 2;
+    end else begin
+      float_mul.exposant = exp[0:N_exposant];
+      if(mantissa_carry) begin
+        float_mul.mantisse = mant[N_mantisse + 1:MANTISSA_PRODUCT_BITS - 2];
+      end else begin
+        float_mul.mantisse = mant[N_mantisse:MANTISSA_PRODUCT_BITS - 3];
+      end
+    end
+
+    float_mul.signe = op1.signe ^ op2.signe; // XOR
   endfunction
 
   /**
