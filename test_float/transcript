@@ -1,5 +1,5 @@
 # vsim -do {run -all} -c tb_float_pack 
-# ** Note: (vsim-3813) Design is being optimized due to module recompilation...
+# ** Note: (vsim-3812) Design is being optimized...
 # //  ModelSim SE-64 10.0c Jul 21 2011 Linux 2.6.32-5-amd64
 # //
 # //  Copyright 1991-2011 Mentor Graphics Corporation
@@ -13,5 +13,5 @@
 # Loading work.float_pack
 # Loading work.tb_float_pack(fast)
 # run -all 
-# ** Note: $finish    : tb_float_pack.sv(52)
-#    Time: 30 ns  Iteration: 0  Instance: /tb_float_pack
+# ** Note: $finish    : tb_float_pack.sv(59)
+#    Time: 40 ns  Iteration: 0  Instance: /tb_float_pack
