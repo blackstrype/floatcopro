@@ -8,6 +8,11 @@ vlog_option_8_4 =  +define+TB_EXP_SIZE=4 +define+TB_MANT_SIZE=8 +define+SIGN=s +
 
 all: simu_float_conv_23_8 simu_float_mult_23_8 simu_float_div_23_8 simu_float_add_23_8 simu_float_conv_8_4  simu_float_mult_8_4 simu_float_div_8_4 simu_float_add_8_4 
 
+simu_petit_test: .floatpack_8_4
+	vlog +acc tb_float_pack.sv
+	vsim -c tb_float_pack -do "run -all"
+	touch simu_petit_test
+	cp test.dat petit_test.dat
 
 simu_float_add_8_4: .tb_float_add_8_4 
 	vsim -c tb_float_add -do "run -all"

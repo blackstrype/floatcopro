@@ -78,7 +78,7 @@ package float_pack;
   function float float_mul(float op1, float op2);
     parameter MANTISSA_PRODUCT_BITS = N_mantisse * 2 + 2;
     // stockage temporaire pour les resultats du multiplication
-    logic [0:N_exposant+1] exp;
+    bit signed [0:N_exposant+1] exp;
     bit [0:MANTISSA_PRODUCT_BITS - 1] mant;
     bit mantissa_carry; // mantissa too big
     bit exponent_carry; // exponent too big
@@ -86,8 +86,9 @@ package float_pack;
 
     // mant = 1.x * 1.y
     // where x = op1.mantisse, y = op2.mantisse
-    assign mant = (op1.mantisse + 2**N_mantisse) * 
-                  (op2.mantisse + 2**N_mantisse);
+//    assign mant = (op1.mantisse + 2**N_mantisse) * 
+//                  (op2.mantisse + 2**N_mantisse);
+    assign mant = op1.mantisse + 2**N_mantisse;
     // exponant calculated as...
     assign exp = op1.exposant + op2.exposant + mantissa_carry -
                  2**N_exposant - 1 + 1;
