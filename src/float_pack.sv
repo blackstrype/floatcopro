@@ -18,6 +18,7 @@ package float_pack;
      bit [0:22]    mantisse; // mantisse 
   } float_ieee;
 
+  // synthesis translate_off
   /**
    * Convert shortreal to float_ieee
   **/
@@ -71,6 +72,7 @@ package float_pack;
      
     float2real = float_ieee2real(tmp);
   endfunction // float2real
+  // synthesis translate_on
 
   /**
    * multiplication de op1 et op2
@@ -86,6 +88,7 @@ package float_pack;
     logic [MANTISSA_PRODUCT_BITS - 1:0] mant_product;
     logic [N_mantisse + 1:0] mant_final;
     logic mant_carry; // mantissa too big
+    logic mant_round; // mantissa rounding condition
 
     logic signed [N_exposant+1:0] exp;
     logic exp_big; // exponent too big
@@ -98,7 +101,9 @@ package float_pack;
     // mantproduct
     assign mant_product = mant1 * mant2;
     assign mant_carry = mant_product[MANTISSA_PRODUCT_BITS - 1];
-    assign mant_final = mant_product[MANTISSA_PRODUCT_BITS - 1:N_mantisse];
+    //assign mant_round = mant_product[N_mantisse - 1:0] == '1;
+    assign mant_final = mant_product[MANTISSA_PRODUCT_BITS - 1:N_mantisse] /* +
+                        mant_round*/;
 
     // exponant calculated as...
     assign exp = op1.exposant + op2.exposant - D_e + mant_carry;
@@ -131,7 +136,7 @@ package float_pack;
   /**
    * addition ou soustraction de op1 par op2
   **/
-  function float_ieee float_addsub(float_ieee op1, float_ieee op2, bit sub);
+  function float float_addsub(float_ieee op1, float_ieee op2, bit sub);
     // addition ou soustraction de op1 de op2
     // if (sub), faire un soustraction
     // else, faire une addition
