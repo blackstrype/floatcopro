@@ -78,43 +78,50 @@ package float_pack;
   function float float_mul(float op1, float op2);
     parameter MANTISSA_PRODUCT_BITS = N_mantisse * 2 + 2;
     parameter D_e = (2**(N_exposant-1)-1);
+    parameter EXP_MIN = 1; // minimum exponent value possible
+    parameter EXP_MAX = 2**(N_exposant) - 2; // max exponent value possible
+
     // stockage temporaire pour les resultats du multiplication
-    bit signed [0:N_exposant+1] exp;
-    bit [0:MANTISSA_PRODUCT_BITS - 1] mant;
-    bit mantissa_carry; // mantissa too big
-    bit exponent_big; // exponent too big
-    bit exponent_small; // exponent too small
+    logic [N_mantisse:0] mant1, mant2;
+    logic [MANTISSA_PRODUCT_BITS - 1:0] mant_product;
+    logic [N_mantisse + 1:0] mant_final;
+    logic mant_carry; // mantissa too big
 
-    // mant = 1.x * 1.y
-    // where x = op1.mantisse, y = op2.mantisse
-    assign mant = (op1.mantisse + 2**(N_mantisse)) * 
-                  (op2.mantisse + 2**(N_mantisse));
+    logic signed [N_exposant+1:0] exp;
+    logic exp_big; // exponent too big
+    logic exp_small; // exponent too small
+
+    // mantisse = 1.x
+    mant1 = {1'b1, op1.mantisse};
+    mant2 = {1'b1, op2.mantisse};
+
+    // mantproduct
+    assign mant_product = mant1 * mant2;
+    assign mant_carry = mant_product[MANTISSA_PRODUCT_BITS - 1];
+    assign mant_final = mant_product[MANTISSA_PRODUCT_BITS - 1:N_mantisse];
+
     // exponant calculated as...
-//    assign exp = op1.exposant + op2.exposant + mantissa_carry;
-    assign exp = op1.exposant + op2.exposant + mantissa_carry - D_e;
-
-    assign mantissa_carry = mant[MANTISSA_PRODUCT_BITS - 1] |
-                            mant[MANTISSA_PRODUCT_BITS - 2];
-    assign exponent_big = exp[N_exposant];
-    assign exponent_small = exp[N_exposant+1];
+    assign exp = op1.exposant + op2.exposant - D_e + mant_carry;
+    assign exp_big = exp > EXP_MAX;
+    assign exp_small = op1.exposant == 0 |
+                       op2.exposant == 0 |
+                       exp < EXP_MIN;
 
     // if there is carry (else block), shift mantissa and add to exponant
-    if(exponent_small) begin
+    if(exp_small) begin
       // if the exponent is too small, saturate to zero
-      float_mul.mantisse = 0;
-      //float_mul.exposant = 2**(N_exposant - 1) - 1;   
-      float_mul.exposant = 4'b1011;
-    end else if(exponent_big) begin
+      float_mul.mantisse = '0;
+      float_mul.exposant = '0;
+    end else if(exp_big) begin
       // if the exponant is too large, saturate to infinity
-      float_mul.mantisse = 2**N_mantisse - 1;
-      //float_mul.exposant = 2**N_exposant - 2;
-      float_mul.exposant = 4'b1101;
+      float_mul.mantisse = '1;
+      float_mul.exposant = EXP_MAX;
     end else begin
-      float_mul.exposant = exp[0:N_exposant];
-      if(mantissa_carry) begin
-        float_mul.mantisse = mant[N_mantisse + 1:MANTISSA_PRODUCT_BITS - 2];
+      float_mul.exposant = exp[N_exposant - 1:0];
+      if(mant_carry) begin
+        float_mul.mantisse = mant_final[N_mantisse:1];
       end else begin
-        float_mul.mantisse = mant[N_mantisse:MANTISSA_PRODUCT_BITS - 3];
+        float_mul.mantisse = mant_final[N_mantisse - 1:0];
       end
     end
 

@@ -1,6 +1,6 @@
-# vsim -do {run -all} -c tb_float_pack 
+# vsim -do {run -all} -c tb_float_conv 
 # ** Note: (vsim-3812) Design is being optimized...
-# //  ModelSim SE-64 10.0c Jul 21 2011 Linux 2.6.32-5-amd64
+# //  ModelSim SE-64 10.0d Oct 30 2011 Linux 2.6.32-5-amd64
 # //
 # //  Copyright 1991-2011 Mentor Graphics Corporation
 # //  All Rights Reserved.
@@ -10,8 +10,9 @@
 # //  LICENSORS AND IS SUBJECT TO LICENSE TERMS.
 # //
 # Loading sv_std.std
-# Loading work.float_pack
-# Loading work.tb_float_pack(fast)
+# Loading work.float_pack(fast)
+# Loading work.tb_float_conv_sv_unit(fast)
+# Loading work.tb_float_conv(fast)
 # run -all 
-# ** Note: $finish    : tb_float_pack.sv(59)
-#    Time: 40 ns  Iteration: 0  Instance: /tb_float_pack
+# ** Note: $finish    : tb_float_conv.sv(68)
+#    Time: 10 ms  Iteration: 0  Instance: /tb_float_conv
