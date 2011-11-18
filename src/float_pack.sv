@@ -128,39 +128,111 @@ package float_pack;
       end else begin
         float_mul.mantisse = mant_final[N_mantisse - 1:0];
       end
-    end
+    end 
 
     float_mul.signe = op1.signe ^ op2.signe; // XOR
-  endfunction
+  endfunction // float_mul
 
+   /*************************************
+    * Test area with overlapping functionality for the add_sub of Taha
+   *************************************/
+
+   /**
+    * Soustraire de s1 par s2
+   **/
+   function float float_sub(float s1,float s2);
+     float_add(s1, {~s2.signe, s2.exposant, s2.mantisse}); // float_add(s1, -s2)
+   endfunction // float_sub
+
+   /**
+    * Addition de s1 et s2
+   **/
+   function float float_add(float s1, float s2);
+     float big_operand, small_operand;
+     
+     if( s1_is_bigger(s1, s2) ) begin
+       big_operand = s1;
+       small_operand = s2;
+     end else begin
+       big_operand = s1;
+       small_operand = s2;
+     end
+     //Unfinished functionality
+   endfunction
+
+   /**
+    * Returns 1 if s1 is the bigger of the 2 numbers otherwise 0
+   **/
+   function logic s1_is_bigger(float s1, float s2);
+     logic s1_bigger_exponent;
+     logic s1_bigger_mantissa;
+     logic exponents_are_equal;
+     
+     exponents_are_equal = (s1.exposant == s2.exposant);
+     s1_bigger_exponent = (s1.exposant > s2.exposant);
+     s1_bigger_mantissa = (s1.mantisse > s2.mantisse);
+
+     // then size of mantissa, if the exponents are equal.
+     s1_is_bigger = exponents_are_equal ?
+             (s1_bigger_mantissa ? 1 : 0) :
+             (s1_bigger_exponent ? 1 : 0);
+   endfunction // max_operand
+
+   /**
+    * Notes:
+    * -When to add the mantissas together (s1, s2, op) -> (resulting sign)
+    *  -(0, 0, 0) -> (s1.sign)
+    *  -(0, 1, 1) -> (s1.sign)
+    *  -(1, 0, 1) -> (s1.sign)
+    *  -(1, 1, 0) -> (s1.sign)
+    * -When to subtract mantissas (s1, s2, op) -> (result)
+    *  -(0, 0, 1) -> (s1 > s2 ? s1.sign : ~s1.sign)
+    *  -(0, 1, 0) -> (s1 > s2 ? s1.sign : ~s1.sign)
+    *  -(1, 0, 0) -> (s1 > s2 ? s1.sign : ~s1.sign)
+    *  -(1, 1, 1) -> (s1 > s2 ? s1.sign : ~s1.sign)
+    *
+    * -Special cases
+    *  -Zero
+    *  -Infinite
+    *  -Any more...?
+   **/
+   /***********************************
+    * End of Test Area
+   ***********************************/
+   
    function float float_sub(float s1,float s2);	
 //A rajouter le test sur le signe dans float_sub!!!!!!!
-   if(s1.signe==s2.signe)
-     if(s1.signe==0)
-     float_sub=float_add_sub(s1,s2,1);
-     else
+     logic soustraire;
+     soustraire = (s1.signe ^ s2.signe);
+
+   if(s1.signe==s2.signe) // if the sign of s1 and s2 are the same
+     if(s1.signe==0) // if sign of s1 is positive
+     float_sub=float_add_sub(s1,s2,1); // perform s1 - s2
+     else // if sign of s1 is negative
 	begin
-     float_sub=float_add_sub(s2,s1,1);
-     float_sub.signe=~float_sub.signe;	
+     float_sub=float_add_sub(s2,s1,1); // perform s2 - s1
+     float_sub.signe=~float_sub.signe; // flip the resulting sign
 	end
-   else
-	if({s1.exposant,s1.mantisse}!=0)	
-     float_sub=float_add_sub(s1,s2,0);
-     else
-	float_sub={~s2.signe,s2.exposant,s2.mantisse};
-   endfunction // float_add_sub
-   
+   else // if the sign of s1 and s2 are different
+	if({s1.exposant,s1.mantisse}!=0) // if s1 != 0
+     float_sub=float_add_sub(s1,s2,0); // perform s1 + s2
+     else // if s1 == 0
+	float_sub={~s2.signe,s2.exposant,s2.mantise}; // return -s2
+   endfunction // float_sub
+
    /**
     * addition ou soustraction de op1 par op2
+    * si opchoice = 1, soustraire
    **/
-   function float float_add_sub(float s1,float s2,bit opchoice);     
-      int delta=0;
-      int mantisse_somme=0;
-      int un_position =N_mantisse+1;
-      if(opchoice==0)           
-	begin
-	//signe du résultat
-	   float_add_sub.signe=s1.signe; //a chauqe fois que float_add est appelée dans float_add_sub le signe du résultat est toujours le signe de s1
+   function float float_add_sub(float s1,float s2,bit opchoice);
+     int delta=0;
+     int mantisse_somme=0;
+     int un_position =N_mantisse+1;
+     if(opchoice==0) begin // if our operator is addition
+       //signe du résultat
+       //a chauqe fois que float_add est appelée dans float_add_sub le signe du
+       //résultat est toujours le signe de s1
+       float_add_sub.signe=s1.signe; // signe will be 
 	   //addition
 	   if({s1.exposant,s1.mantisse}==0)
 	     float_add_sub=s2; 
