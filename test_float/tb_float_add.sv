@@ -106,8 +106,8 @@ $fdisplay(of,"===Test addition===");
 		begin
 		  zero_sat_case++ ;
 		  if (C != pos_zero_val && C!= neg_zero_val) zero_sat_err ++ ;
-		  //$fdisplay(of,"Troncature à zero  positif mal traité") ; 
-		  //$fdisplay(of,"%e %e %e %e s:%x m:%x e:%x",rA,rB,rC,rD,C.`SIGN,C.`MANT,C.`EXP) ;
+		    $fdisplay(of,"Troncature à zero  positif mal traité") ; 
+		    $fdisplay(of,"%e %e %e %e s:%x m:%x e:%x",rA,rB,rC,rD,C.`SIGN,C.`MANT,C.`EXP) ;
 		end
 		else // Le signe mauvais
 		if (((rD >0) && (rC<0)) ||((rD<0) && (rC>0)))

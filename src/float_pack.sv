@@ -99,18 +99,21 @@ package float_pack;
     mant2 = {1'b1, op2.mantisse};
 
     // mantproduct
-    assign mant_product = mant1 * mant2;
-    assign mant_carry = mant_product[MANTISSA_PRODUCT_BITS - 1];
-    //assign mant_round = mant_product[N_mantisse - 1:0] == '1;
-    assign mant_final = mant_product[MANTISSA_PRODUCT_BITS - 1:N_mantisse] /* +
+    mant_product = mant1 * mant2;
+    mant_carry = mant_product[MANTISSA_PRODUCT_BITS - 1];
+    //mant_round = mant_product[N_mantisse - 1:0] == '1;
+    mant_final = mant_product[MANTISSA_PRODUCT_BITS - 1:N_mantisse] /* +
                         mant_round*/;
 
     // exponant calculated as...
-    assign exp = op1.exposant + op2.exposant - D_e + mant_carry;
-    assign exp_big = exp > EXP_MAX;
-    assign exp_small = op1.exposant == 0 |
-                       op2.exposant == 0 |
-                       exp < EXP_MIN;
+    exp = op1.exposant + op2.exposant - D_e;
+    exp_small = op1.exposant == 0 |
+                op2.exposant == 0 |
+                (exp == 0 & !mant_carry);
+    // exponant is too big if 
+    exp_big = (exp == '1) |
+              (exp == ('1 - 1)) |
+              (exp == ('1 - 2) & mant_carry);
 
     // if there is carry (else block), shift mantissa and add to exponant
     if(exp_small) begin
@@ -122,12 +125,13 @@ package float_pack;
       float_mul.mantisse = '1;
       float_mul.exposant = EXP_MAX;
     end else begin
-      float_mul.exposant = exp[N_exposant - 1:0];
+      // Shift mantissa if it was found to be bigger than 1
       if(mant_carry) begin
-        float_mul.mantisse = mant_final[N_mantisse:1];
-      end else begin
-        float_mul.mantisse = mant_final[N_mantisse - 1:0];
+        mant_final = mant_final >> 1;
+        exp = exp + 1;
       end
+      float_mul.exposant = exp[N_exposant - 1:0];
+      float_mul.mantisse = mant_final[N_mantisse - 1:0];
     end 
 
     float_mul.signe = op1.signe ^ op2.signe; // XOR
@@ -139,14 +143,14 @@ package float_pack;
 
    /**
     * Soustraire de s1 par s2
-   **/
+   **
    function float float_sub(float s1,float s2);
      float_add(s1, {~s2.signe, s2.exposant, s2.mantisse}); // float_add(s1, -s2)
    endfunction // float_sub
 
    /**
     * Addition de s1 et s2
-   **/
+   **
    function float float_add(float s1, float s2);
      float big_operand, small_operand;
      
@@ -162,7 +166,7 @@ package float_pack;
 
    /**
     * Returns 1 if s1 is the bigger of the 2 numbers otherwise 0
-   **/
+   **
    function logic s1_is_bigger(float s1, float s2);
      logic s1_bigger_exponent;
      logic s1_bigger_mantissa;
@@ -191,15 +195,25 @@ package float_pack;
     *  -(1, 0, 0) -> (s1 > s2 ? s1.sign : ~s1.sign)
     *  -(1, 1, 1) -> (s1 > s2 ? s1.sign : ~s1.sign)
     *
+    * 
+    *
     * -Special cases
-    *  -Zero
+    *  -Zero (or not)
+    *   -Resulting Exponent is less than min_exp
+    *    if: Resulting Exponent == (min_exp-1) and resulting mantisse is > 1
+    *    then: exp = min_exp, shift mantisse
+    *    if: 
     *  -Infinite
-    *  -Any more...?
    **/
    /***********************************
     * End of Test Area
    ***********************************/
-   
+
+
+   /**
+    * float_add_sub decommenté pour synthèse de float_mul
+   **
+
    function float float_sub(float s1,float s2);	
 //A rajouter le test sur le signe dans float_sub!!!!!!!
      logic soustraire;
@@ -223,7 +237,7 @@ package float_pack;
    /**
     * addition ou soustraction de op1 par op2
     * si opchoice = 1, soustraire
-   **/
+   **
    function float float_add_sub(float s1,float s2,bit opchoice);
      int delta=0;
      int mantisse_somme=0;
@@ -396,6 +410,10 @@ else
   end      
 
      endfunction
+
+   /**
+    * float_add_sub decommenté pour synthèse de float_mul
+   **/
    
    function float float_div(float s1,float s2);
       
