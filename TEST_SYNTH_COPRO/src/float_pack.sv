@@ -109,11 +109,14 @@ package float_pack;
     exp = op1.exposant + op2.exposant - D_e;
     exp_small = op1.exposant == 0 |
                 op2.exposant == 0 |
-                (exp == 0 & !mant_carry);
+                (exp == 0 && ~mant_carry) |
+                (exp < 0);
     // exponant is too big if 
-    exp_big = (exp == '1) |
+    exp_big = (exp > EXP_MAX) |
+              ((exp > EXP_MAX - 1) && mant_carry);
+    /*exp_big = (exp == '1) |
               (exp == ('1 - 1)) |
-              (exp == ('1 - 2) & mant_carry);
+              (exp == ('1 - 2) & mant_carry);*/
 
     // if there is carry (else block), shift mantissa and add to exponant
     if(exp_small) begin
@@ -137,51 +140,6 @@ package float_pack;
     float_mul.signe = op1.signe ^ op2.signe; // XOR
   endfunction // float_mul
 
-   /*************************************
-    * Test area with overlapping functionality for the add_sub of Taha
-   *************************************/
-
-   /**
-    * Soustraire de s1 par s2
-   **
-   function float float_sub(float s1,float s2);
-     float_add(s1, {~s2.signe, s2.exposant, s2.mantisse}); // float_add(s1, -s2)
-   endfunction // float_sub
-
-   /**
-    * Addition de s1 et s2
-   **
-   function float float_add(float s1, float s2);
-     float big_operand, small_operand;
-     
-     if( s1_is_bigger(s1, s2) ) begin
-       big_operand = s1;
-       small_operand = s2;
-     end else begin
-       big_operand = s1;
-       small_operand = s2;
-     end
-     //Unfinished functionality
-   endfunction
-
-   /**
-    * Returns 1 if s1 is the bigger of the 2 numbers otherwise 0
-   **
-   function logic s1_is_bigger(float s1, float s2);
-     logic s1_bigger_exponent;
-     logic s1_bigger_mantissa;
-     logic exponents_are_equal;
-     
-     exponents_are_equal = (s1.exposant == s2.exposant);
-     s1_bigger_exponent = (s1.exposant > s2.exposant);
-     s1_bigger_mantissa = (s1.mantisse > s2.mantisse);
-
-     // then size of mantissa, if the exponents are equal.
-     s1_is_bigger = exponents_are_equal ?
-             (s1_bigger_mantissa ? 1 : 0) :
-             (s1_bigger_exponent ? 1 : 0);
-   endfunction // max_operand
-
    /**
     * Notes:
     * -When to add the mantissas together (s1, s2, op) -> (resulting sign)
@@ -195,8 +153,6 @@ package float_pack;
     *  -(1, 0, 0) -> (s1 > s2 ? s1.sign : ~s1.sign)
     *  -(1, 1, 1) -> (s1 > s2 ? s1.sign : ~s1.sign)
     *
-    * 
-    *
     * -Special cases
     *  -Zero (or not)
     *   -Resulting Exponent is less than min_exp
@@ -205,219 +161,102 @@ package float_pack;
     *    if: 
     *  -Infinite
    **/
-   /***********************************
-    * End of Test Area
-   ***********************************/
 
+  /**
+   * Addition de s1 et s2
+  **/
+  function float float_add(float s1,float s2);   
+    float_add=float_add_sub(s1,s2,0);
+  endfunction // float_add
 
-   /**
-    * float_add_sub decommenté pour synthèse de float_mul
-   **
+  /**
+   * Soustraction de s1 par s2
+  **/
+  function float float_sub(float s1,float s2);	
+    float_sub=float_add_sub(s1,s2,1);
+  endfunction // float_sub
 
-   function float float_sub(float s1,float s2);	
-//A rajouter le test sur le signe dans float_sub!!!!!!!
-     logic soustraire;
-     soustraire = (s1.signe ^ s2.signe);
-
-   if(s1.signe==s2.signe) // if the sign of s1 and s2 are the same
-     if(s1.signe==0) // if sign of s1 is positive
-     float_sub=float_add_sub(s1,s2,1); // perform s1 - s2
-     else // if sign of s1 is negative
-	begin
-     float_sub=float_add_sub(s2,s1,1); // perform s2 - s1
-     float_sub.signe=~float_sub.signe; // flip the resulting sign
-	end
-   else // if the sign of s1 and s2 are different
-	if({s1.exposant,s1.mantisse}!=0) // if s1 != 0
-     float_sub=float_add_sub(s1,s2,0); // perform s1 + s2
-     else // if s1 == 0
-	float_sub={~s2.signe,s2.exposant,s2.mantise}; // return -s2
-   endfunction // float_sub
-
-   /**
-    * addition ou soustraction de op1 par op2
-    * si opchoice = 1, soustraire
-   **
-   function float float_add_sub(float s1,float s2,bit opchoice);
-     int delta=0;
-     int mantisse_somme=0;
-     int un_position =N_mantisse+1;
-     if(opchoice==0) begin // if our operator is addition
-       //signe du résultat
-       //a chauqe fois que float_add est appelée dans float_add_sub le signe du
-       //résultat est toujours le signe de s1
-       float_add_sub.signe=s1.signe; // signe will be 
-	   //addition
-	   if({s1.exposant,s1.mantisse}==0)
-	     float_add_sub=s2; 
-	     	     
-	   else
-	     if({s2.exposant,s2.mantisse}==0)
-	       float_add_sub=s1;
-	     else
-	       begin
-		  if(s1.exposant>=s2.exposant)
-		    begin
-		       delta=s1.exposant-s2.exposant;//delta est la valeur absolue de la difference des exposants
-       		       //addition des mantisses allignées
-		       mantisse_somme=(s1.mantisse+2**N_mantisse);		   
-		       mantisse_somme=mantisse_somme+((2**N_mantisse+s2.mantisse)>>delta);
-		    end // if (s1.exposant>=s2.exposant)
-		  else
-		    begin
-		       delta=s2.exposant-s1.exposant;
-		       //addition des mantisses allignées
-		       mantisse_somme=(s2.mantisse+2**N_mantisse);
-		       mantisse_somme=mantisse_somme+((2**N_mantisse+s1.mantisse)>>delta);
-		    end // else: !if(s1.exposant>=s2.exposant)
-		  
-		  //position du premier 1 dans la somme et génération de l'exposant  et génération de l'exposant
-		  if(mantisse_somme[N_mantisse+1]==1)
-      		    begin
-		       if(s1.exposant>=s2.exposant)
-			 begin
-			    if(s1.exposant==2**N_exposant-2)
-			      begin
-				 float_add_sub.exposant=2**N_exposant-2;
-				 float_add_sub.mantisse=2**N_mantisse-1;
-			      end
-			    else
-			      begin
-				 float_add_sub.exposant=s1.exposant+1;
-				 un_position=N_mantisse+1;
-				 mantisse_somme[un_position]=0;
-				 float_add_sub.mantisse=mantisse_somme>>1;
-			      end // else: !if(s1.exposant==2**N_exposant-1)
-			 end // if (s1.exposant>=s2.exposant)
-		       else
-			 begin
-			    if(s2.exposant==2**N_exposant-2)
-			      begin
-				 float_add_sub.exposant=2**N_exposant-2;
-				 float_add_sub.mantisse=2**N_mantisse-1;
-			      end
-			    else
-			      begin
-				 float_add_sub.exposant=s2.exposant+1;
-				 un_position=N_mantisse+1;
-				 mantisse_somme[un_position]=0;
-				 float_add_sub.mantisse=mantisse_somme>>1;
-			      end 
-			 end 		  
-		    end
-		  else 
-		    begin
-		       float_add_sub.exposant=(s1.exposant>=s2.exposant)?s1.exposant:s2.exposant;
-		       un_position=N_mantisse;
-		       mantisse_somme[un_position]=0;
-		       float_add_sub.mantisse=mantisse_somme ;
-		    end
-	       end // else: !if(s2==0)
-	end        
-else
-  begin
-
-     if(s1==s2)
-       float_add_sub=0;
-     else
-       begin
-	  if({s2.exposant,s2.mantisse}==0)
-	    float_add_sub=s1;
-	  else
-	    if({s1.exposant,s1.mantisse}==0)
-	      begin
-		 float_add_sub=s2;
-		
-	      end
-	    else
-	      begin
-		 
-		 if(s1.exposant>s2.exposant)
-		   begin
-		      float_add_sub.signe=s1.signe;//le signe est celui du float ayant le plus grand exposant
-		      delta=s1.exposant-s2.exposant;//delta est la valeur absolue de la difference des exposant
-		      mantisse_somme=(s1.mantisse+2**N_mantisse);		   
-		      mantisse_somme=mantisse_somme-((2**N_mantisse+s2.mantisse)>>delta);
-		   end
-		 
-		 else
-		   if(s2.exposant>s1.exposant)
-		     begin
-			float_add_sub.signe= ~s1.signe;
-			delta=s2.exposant-s1.exposant;
-			mantisse_somme=(s2.mantisse+2**N_mantisse);
-			mantisse_somme=mantisse_somme-((2**N_mantisse+s1.mantisse)>>delta);
-		     end // else: !if(s1.exposant>=s2.exposant)
-		   else
-		     begin
-			if(s1.mantisse>s2.mantisse)
-			  begin
-			     float_add_sub.signe=0;
-			     mantisse_somme={0,s1.mantisse-s2.mantisse};
-			  end
-			else
-			  if(s2.mantisse>s1.mantisse)
-			    begin
-			       float_add_sub.signe=1;
-			       mantisse_somme={0,s2.mantisse-s1.mantisse};
-			    end
-			  else
-			    float_add_sub=0;
-		     end
-		 
-		 
-		 //recherche du premier un dans la mantisse
-		 un_position=N_mantisse;
-		 while(mantisse_somme[un_position] !=1 && un_position >= 0 )
-		   begin
-		      un_position=un_position-1;
-		   end
-		 
-		 if(s1.exposant>s2.exposant)
-		   if(s1.exposant>=(N_mantisse-un_position))
-		     float_add_sub.exposant=s1.exposant-(N_mantisse-un_position);
-		   else
-		     begin
-			float_add_sub.exposant=0;
-			mantisse_somme=0;
-		     end
-       		 else
-		   if(s2.exposant>s1.exposant)
-		     if(s2.exposant>=(N_mantisse-un_position))
-		       float_add_sub.exposant=s2.exposant-(N_mantisse-un_position);
-		     else
-		       begin
-			  float_add_sub.exposant=0;
-			  mantisse_somme=0;
-		       end
-		   else
-		     if(s1.mantisse!=s2.mantisse)
-		       if(s1.exposant>=(N_mantisse-un_position))
-	      		 float_add_sub.exposant=s1.exposant-(N_mantisse-un_position);
-		       else
-			 begin
-			    float_add_sub.exposant=0;
-			    mantisse_somme=0;
-			 end
-		 
-		 //génération de la nouvelle mantisse avec troncature
-		 mantisse_somme[un_position]=0;
-		 mantisse_somme=mantisse_somme<<(N_mantisse-un_position);
-		 float_add_sub.mantisse=mantisse_somme;
-		 
-	      end
-       end 
-  end      
-
-     endfunction
-
-   /**
-    * float_add_sub decommenté pour synthèse de float_mul
-   **/
-   
-   function float float_div(float s1,float s2);
+  /**
+   * Addition ou soustraction de s1 par s2.
+   * addition si opchoice = 0
+   * soustraction si opchoice = 1
+  **/
+  function float float_add_sub(float s1,float s2,bit opchoice);     
+    int delta;
+    int un_position ;
+    int tmp_int; 
       
-     endfunction // float_div
+    float s2S;
+    float Max, Min;
+    float res;
+      
+    logic [2*N_mantisse+1:0] MantMax, MantMin;
+    logic [2*N_mantisse +2:0] MantSum;
+    logic [N_exposant-1:0] 	 ExpSum;
+                  
+    if (opchoice) begin
+      s2S = { ~s2.signe, s2.exposant, s2.mantisse};
+    end else begin
+      s2S = s2;
+    end
+
+    if ({s1.exposant,s1.mantisse}>{s2S.exposant,s2S.mantisse}) begin
+      Max = s1;
+      Min =s2S;
+    end else begin
+      Max = s2S;
+      Min = s1;
+    end
+
+    if (Min.exposant  == 0 && Min.mantisse == 0)
+      return Max;
+      
+    delta = Max.exposant - Min.exposant;
+    MantMax = ({1'b1, Max.mantisse}<<N_mantisse+1);
+    MantMin = ({1'b1, Min.mantisse}<<N_mantisse+1) >> delta;
+      
+    if (Max.signe != Min.signe)
+      MantSum = MantMax - MantMin;
+    else
+      MantSum = MantMax + MantMin;
+      
+    un_position = 2*N_mantisse+1+1;
+
+    while(MantSum[un_position] !=1 && un_position >= 0 ) begin
+      un_position=un_position-1;
+    end
+           
+    tmp_int=Max.exposant+ (un_position-(2*N_mantisse+1));
+
+    if(tmp_int<=0) begin
+      res.signe=Max.signe;
+      res.exposant=0;
+      res.mantisse=0;
+      return res;
+    end
+     
+    if(tmp_int > 2**N_exposant-2) begin
+      res.signe = Max.signe;
+      res.exposant=2**N_exposant-2;
+      res.mantisse=2**N_mantisse-1;
+      return res;
+    end 
+      
+      
+    MantSum = MantSum >> (un_position-N_mantisse);
+    res.signe    = Max.signe;
+    res.exposant = Max.exposant + (un_position-(2*N_mantisse+1));
+    res.mantisse = MantSum[N_mantisse-1:0];
+    return res;
+    
+  endfunction // float_mul
+  
+  /**
+   * Division de s1 par s2
+  **/
+  function float float_div(float s1,float s2);
+    return 0;    
+  endfunction // float_div
 
 endpackage : float_pack
 

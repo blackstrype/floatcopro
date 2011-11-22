@@ -1,6 +1,5 @@
 # vsim -do {run -all} -c tb_float_mult 
 # ** Note: (vsim-3813) Design is being optimized due to module recompilation...
-# ** Warning: ../src/float_pack.sv(412): (vopt-2250) Function "float_div" has no return value assignment.
 # //  ModelSim SE-64 10.0d Oct 30 2011 Linux 2.6.32-5-amd64
 # //
 # //  Copyright 1991-2011 Mentor Graphics Corporation

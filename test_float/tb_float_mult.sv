@@ -105,7 +105,7 @@ $fdisplay(of,"===Test Multiplication===");
 		  zero_sat_case++ ;
 		  if (C != pos_zero_val && C!= neg_zero_val) zero_sat_err ++ ;
 		  //$fdisplay(of,"Troncature à zero  positif mal traité") ; 
-		  //$fdisplay(of,"%e %e %e %e s:%x m:%x e:%x",rA,rB,rC,rD,C.`SIGN,C.`MANT,C.`EXP) ;
+		  //$fdisplay(of,"%e %e %e %e s:%x m:%x e:%x", rA, rB, rC, rD, C.`SIGN, C.`MANT, C.`EXP) ;
 		end
 		else  // Le resultat nul
 		if ((A == pos_zero_val) || (A == neg_zero_val)|| (B == pos_zero_val) || (B == neg_zero_val))
