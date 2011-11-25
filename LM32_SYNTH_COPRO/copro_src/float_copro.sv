@@ -11,6 +11,7 @@ module float_copro(
          output logic[31:0] copro_result
          );
 
+
   // Montant de cycle d'horloge pour l'operation donnée (respectivement)
   parameter add_count = 3;
   parameter sub_count = 3;
@@ -49,7 +50,10 @@ module float_copro(
         init:
           if(copro_valid==1) begin
             state<=attente_c;
-            compteur <= choisir_compteur(opcode);
+            op0<=copro_op0;
+            op1<=copro_op1;
+            opcode <= copro_opcode;
+            compteur <= choisir_compteur(copro_opcode);
           end else begin
             state<=init;
           end
@@ -57,13 +61,11 @@ module float_copro(
         attente_c:
           if(compteur==0) begin
             state<=attente_a;
+            copro_result <= resultat;
             copro_complete<=1;
           end else begin
-            compteur<=compteur-1;
-            state<=attente_c;
-            op0<=copro_op0;
-            op1<=copro_op1;
-            opcode<=copro_opcode;
+            compteur <= compteur-1;
+            state    <= attente_c;
           end // else: !if(compteur==0)
 
         attente_a:      
@@ -72,6 +74,7 @@ module float_copro(
           end else begin
             state<=init;
             copro_complete<=0;
+            
           end
       endcase
     end // if(copro_valid==0)
@@ -89,7 +92,7 @@ module float_copro(
       3: choisir_compteur = div_count;
       default: choisir_compteur = 0; // opcode is invalid
     endcase
-  endtask
+  endfunction
     
 endmodule
 

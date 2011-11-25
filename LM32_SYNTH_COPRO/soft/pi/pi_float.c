@@ -25,12 +25,24 @@ static inline unsigned int get_cc(void)
 // CODE A MODIFIER
 static inline float fmult(float x, float y)
 {
-    return x*y ;
+  float resultat;
+  asm volatile("user %[dest],%[src1],%[src2],0x02"
+                 :[dest] "=r" (resultat)
+                 :[src1] "r" (x),
+                 [src2] "r" (y)
+                 ) ;
+  return resultat;
 }
 
 static inline float fadd(float x, float y)
 {
-    return  x + y ;
+  float resultat;
+  asm volatile("user %[dest],%[src1],%[src2],0x00"
+                 :[dest] "=r" (resultat)
+                 :[src1] "r" (x),
+                 [src2] "r" (y)
+                 ) ;
+  return resultat;
 }
 
 static inline float fdiv(float x, float y)
